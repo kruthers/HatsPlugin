@@ -1,0 +1,9 @@
+model_data_start:
+  leather_horse_armor: 0
+  leather_hat: 0
+no_rp_auto_disable: true
+hat_enchating: false
+soul_bound: true
+messages:
+  disabled: "<red><b>Hats Notice</b><br>Looks like you have refused the server resource pack, hats have been disabled.<br><i>Override this with <click:run_command:'/hats force_enable'>/hats force_enable</click>"
+

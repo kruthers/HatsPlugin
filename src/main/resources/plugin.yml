@@ -1,0 +1,36 @@
+name: Hats
+version: '${version}'
+main: com.kruthers.hats.HatsPlugin
+api-version: 1.19
+prefix: PChat
+depend: [ ProtocolLib ]
+authors: [ kruthers ]
+description: Hats! What more do you want!
+website: www.kruthers.com
+permissions:
+  hats.list:
+    description: Veiw all hats
+    default: true
+  hats.modify:
+    description: Allows you to modify hats
+    default: op
+  hats.add:
+    description: Allows adding of hats
+    default: op
+  hats.remove:
+    description: Remove hat
+    default: op
+    children:
+      - hats.add
+  hats.give:
+    description: give a hat
+    default: op
+  hats.help:
+    description: Hats help command
+    default: true
+  hats.force_enable:
+    description: force enable hats
+    default: true
+  hats.dev:
+    description: Dev command for hats
+    default: false
