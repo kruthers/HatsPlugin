@@ -6,33 +6,35 @@ import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
 fun isItemAHat(item: ItemStack?, plugin: HatsPlugin): Boolean {
-    return (item != null && item.type == Material.LEATHER_HORSE_ARMOR && item.itemMeta.hasCustomModelData() && item.itemMeta.customModelData > plugin.getHatBaseID())
+    return (item != null && item.type == Material.LEATHER_HORSE_ARMOR && item.itemMeta.hasCustomModelData() && plugin.getHatFromModelData(item.itemMeta.customModelData) != null)
 }
 
 fun isItemAHelmet(item: ItemStack?, plugin: HatsPlugin): Boolean {
-    return (item != null && item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData() && item.itemMeta.customModelData > plugin.getHelmetBaseID())
+    return (item != null && item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData() && plugin.getHatFromModelData(item.itemMeta.customModelData) != null)
 }
 
-fun convertToHat(helmet: ItemStack, plugin: HatsPlugin): ItemStack {
+fun convertToHat(helmet: ItemStack): ItemStack {
     return helmet.also {
         it.type = Material.LEATHER_HORSE_ARMOR
         it.itemMeta = it.itemMeta.also { meta ->
             if (meta.hasCustomModelData()) {
-                val modelData = meta.customModelData - plugin.getHelmetBaseID()
-                meta.setCustomModelData(modelData + plugin.getHatBaseID())
+                meta.setCustomModelData(meta.customModelData)
+                meta.isUnbreakable = true
+                meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE)
             }
         }
     }
 }
 
-fun convertToHelmet(hat: ItemStack, plugin: HatsPlugin): ItemStack {
+fun convertToHelmet(hat: ItemStack): ItemStack {
     return hat.also {
         it.type = Material.LEATHER_HELMET
         it.itemMeta = it.itemMeta.also { meta ->
             if (meta.hasCustomModelData()) {
-                val modelData = meta.customModelData - plugin.getHatBaseID()
-                meta.setCustomModelData(modelData + plugin.getHelmetBaseID())
+                meta.setCustomModelData(meta.customModelData)
+                meta.isUnbreakable = true
                 meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES)
+                meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE)
             }
         }
     }

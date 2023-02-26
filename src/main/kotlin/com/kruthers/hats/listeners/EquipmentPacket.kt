@@ -8,7 +8,9 @@ import com.comphenix.protocol.events.PacketEvent
 import com.comphenix.protocol.wrappers.EnumWrappers.ItemSlot
 import com.kruthers.hats.HatsPlugin
 import com.kruthers.hats.classes.AbstractPacket
+import com.kruthers.hats.utils.convertToHat
 import com.kruthers.hats.utils.isItemAHat
+import com.kruthers.hats.utils.isItemAHelmet
 import org.bukkit.Material
 import org.bukkit.World
 import org.bukkit.entity.Entity
@@ -28,15 +30,19 @@ class EquipmentPacket(private val pl: HatsPlugin):
                 it.type = Material.LEATHER_HELMET
             })
             event.packet = packet.handle
+        } else if (!this.pl.hasHatsDisabled(receiver) && isItemAHelmet(item, this.pl)) {
+            val hat = convertToHat(item!!.clone())
+            packet.setSlotStackPair(ItemSlot.HEAD, hat)
+            event.packet = packet.handle
         }
     }
 
     internal class WrapperPlayServerEntityEquipment : AbstractPacket {
-        constructor() : super(PacketContainer(Companion.TYPE), Companion.TYPE) {
+        constructor() : super(PacketContainer(TYPE), TYPE) {
             handle.modifier.writeDefaults()
         }
 
-        constructor(packet: PacketContainer?) : super(packet, Companion.TYPE) {}
+        constructor(packet: PacketContainer?) : super(packet, TYPE) {}
 
         /**
          * Retrieve Entity ID.

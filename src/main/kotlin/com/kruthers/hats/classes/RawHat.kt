@@ -11,19 +11,14 @@ class RawHat(
         fun fromHat(hat: Hat): RawHat {
             val mm = MiniMessage.miniMessage()
             val displayName = mm.serialize(hat.getDisplayName())
-            val description = mm.serialize(hat.getDescription())
+            val description = hat.getDescription().joinToString("<br>"){ mm.serialize(it) }
 
             return RawHat(hat.getID(), displayName, hat.getModelData(), description, hat.isDyeable())
         }
     }
 
     fun toHat(): Hat {
-        val mm = MiniMessage.miniMessage()
-
-        val displayName = mm.deserialize(this.displayName)
-        val description = mm.deserialize(this.description)
-
-        return Hat(this.id, displayName, this.modelData, description, this.dyeable)
+        return Hat(this.id, this.displayName, this.modelData, this.description, this.dyeable)
     }
 
     override fun serialize(): MutableMap<String, Any> {

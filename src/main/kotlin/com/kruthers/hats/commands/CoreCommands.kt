@@ -5,13 +5,10 @@ import cloud.commandframework.arguments.standard.StringArgument
 import cloud.commandframework.bukkit.BukkitCommandManager
 import cloud.commandframework.meta.CommandMeta
 import cloud.commandframework.minecraft.extras.MinecraftHelp
-import com.kruthers.hats.HatsPlugin
-import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.command.CommandSender
-import java.util.Optional
+import java.util.*
 
-class CoreCommands(private val plugin: HatsPlugin, private val manager: BukkitCommandManager<CommandSender>, private val help: MinecraftHelp<CommandSender>) {
-    private val mm = MiniMessage.miniMessage()
+class CoreCommands(manager: BukkitCommandManager<CommandSender>, private val help: MinecraftHelp<CommandSender>) {
     private val builder = manager.commandBuilder("hats", ArgumentDescription.of("Core hats command"))
 
     init {

@@ -2,14 +2,16 @@ package com.kruthers.hats.commands
 
 import cloud.commandframework.ArgumentDescription
 import cloud.commandframework.arguments.standard.BooleanArgument
-import cloud.commandframework.arguments.standard.IntegerArgument
 import cloud.commandframework.arguments.standard.StringArgument
 import cloud.commandframework.bukkit.BukkitCommandManager
 import cloud.commandframework.context.CommandContext
 import cloud.commandframework.meta.CommandMeta
 import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.commands.arguments.UnusedHatModelArgument
 import com.kruthers.hats.utils.HatNotFoundException
+import com.kruthers.hats.utils.ModelIdNotUnique
+import com.kruthers.hats.utils.isItemAHelmet
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -34,19 +36,12 @@ import org.incendo.interfaces.paper.PlayerViewer
 import org.incendo.interfaces.paper.element.ItemStackElement
 import org.incendo.interfaces.paper.pane.ChestPane
 import org.incendo.interfaces.paper.view.PlayerInventoryView
-import java.util.Optional
 
-class HatsManagementCommands(private val plugin: HatsPlugin, private val manager: BukkitCommandManager<CommandSender>) {
+class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitCommandManager<CommandSender>) {
     private val mm = MiniMessage.miniMessage()
     private val builder = manager.commandBuilder("hats", ArgumentDescription.of("Core hats command"))
     init {
         //add hat management commands
-        manager.command(builder
-            .meta(CommandMeta.DESCRIPTION, "List all hats")
-            .permission("hats.list")
-            .senderType(Player::class.java)
-            .handler(this::showMenu)
-        )
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "List all hats")
             .literal("list")
@@ -58,12 +53,21 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
             .meta(CommandMeta.DESCRIPTION, "Add a new hat")
             .literal("add")
             .argument(StringArgument.of("name"))
-            .argument(IntegerArgument.of("moduleData"))
+            .argument(UnusedHatModelArgument.of("moduleData", plugin))
             .argument(StringArgument.quoted("displayName"))
             .argument(StringArgument.quoted("description"))
-            .argument(BooleanArgument.optional("dyeable"))
+            .argument(BooleanArgument.optional("dyeable", true))
             .permission("hats.add")
             .handler(this::addHat)
+        )
+        manager.command(builder
+            .meta(CommandMeta.DESCRIPTION, "Adds a new hat from a hat item already")
+            .literal("add_from_item")
+            .argument(StringArgument.of("name"))
+            .argument(BooleanArgument.optional("dyeable", true))
+            .senderType(Player::class.java)
+            .permission("hats.add")
+            .handler(this::addHatFromItem)
         )
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Remove a new hat")
@@ -95,7 +99,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
             .literal("modify")
             .argument(StringArgument.of("name"))
             .literal("modelData")
-            .argument(IntegerArgument.of("input"))
+            .argument(UnusedHatModelArgument.of("input", plugin))
             .permission("hats.modify")
             .handler(this::modifyHatModelID)
         )
@@ -116,17 +120,38 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
         val customModelData: Int = context.get("moduleData")
         val displayName: String = context.get("displayName")
         val description: String = context.get("description")
-        val dyeableOption: Optional<Boolean> = context.getOptional<Boolean>("dyeable")
-        val dyable: Boolean = if (dyeableOption.isPresent) {
-            dyeableOption.get()
-        } else {
-            true
-        }
-
-        val hat = Hat(id, mm.deserialize(displayName), customModelData, mm.deserialize(description), dyable)
+        val dyable: Boolean = context.get("dyeable")
+        val hat = Hat(id, displayName, customModelData, description, dyable)
         this.plugin.addHat(hat)
 
         context.sender.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
+    }
+
+    private fun addHatFromItem(context: CommandContext<CommandSender>) {
+        val id: String = context.get("name")
+        val dyable: Boolean = context.get("dyeable")
+
+        val player = context.sender as Player
+
+        val item = player.inventory.itemInMainHand
+        if (item.type == Material.AIR) {
+            player.sendMessage(Component.text("You must have a hat item in your hand to convert", NamedTextColor.RED))
+            return
+        } else if (isItemAHelmet(item, this.plugin)) {
+            val customModelData = item.itemMeta.customModelData - this.plugin.config.getInt("model_data_start.leather_hat")
+            val displayName = item.itemMeta.displayName()?: Component.text(id)
+            val lore = item.lore()?: mutableListOf()
+
+            val hat = Hat(id, displayName, customModelData, lore, dyable)
+            try {
+                this.plugin.addHat(hat)
+                player.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
+            } catch (error: ModelIdNotUnique) {
+                player.sendMessage(Component.text("Unable to create hat, looks like the custom module data is already in use", NamedTextColor.RED))
+            }
+
+        }
+
     }
 
     private fun removeHat(context: CommandContext<CommandSender>) {
@@ -166,7 +191,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
 
         val hat = this.plugin.hats[id]
         if (hat != null) {
-            hat.setDescription(mm.deserialize(description))
+            hat.setDescription(description)
             this.plugin.hats[id] = hat
             val tags = TagResolver.resolver(
                 Placeholder.parsed("name", id),
@@ -222,8 +247,6 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
         val player = context.sender as Player
 
         val hats: ArrayList<Hat> = ArrayList(plugin.hats.values.sortedBy { it.getModelData() })
-        val hatsBaseId = plugin.getHatBaseID()
-        val helmetBaseId = plugin.getHelmetBaseID()
 
         val menu = buildChestInterface {
             title = Component.text("Hats Menu")
@@ -257,7 +280,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
                 Vector2.at(0,1),
                 Vector2.at(8,4),
                 hats.map { hat ->
-                    getHatElement(hat,Material.LEATHER_HORSE_ARMOR,hatsBaseId,helmetBaseId)
+                    getHatElement(hat)
                 }
             )
             reactiveTransform.backwardElement(Vector2.at(1,0)) { transform ->
@@ -282,8 +305,8 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
 
 
     //util
-    private fun getHatElement(hat: Hat, material: Material, hatBaseID: Int, helmet: Int): ItemStackElement<ChestPane> {
-        return hat.getItem(material, hatBaseID).also { it.also {
+    private fun getHatElement(hat: Hat): ItemStackElement<ChestPane> {
+        return hat.getItem().also { it.also {
             val lore: MutableList<Component> = mutableListOf(
                 Component.text("Hat ID: ", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false)
                         .append(Component.text(hat.getID(), NamedTextColor.GRAY)),
@@ -291,7 +314,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
                         .append(Component.text(hat.getModelData(), NamedTextColor.GRAY)),
                 Component.empty()
             )
-            lore.addAll(hat.getLore())
+            lore.addAll(hat.getDescription())
             it.lore(lore)
         }}.asElement { handler ->
             val player = handler.viewer().player()
@@ -309,7 +332,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
                 }
                 ClickType.LEFT -> {
                     if (player.hasPermission("hats.give")) {
-                        player.inventory.addItem(hat.getItem(material,hatBaseID))
+                        player.inventory.addItem(hat.getItem())
                         player.sendMessage(mm.deserialize("<green><i>You have been given 1x ${hat.getID()}"))
                     } else {
                         player.sendMessage(Bukkit.getServer().permissionMessage())
@@ -321,7 +344,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, private val manager
                     val gs = GsonComponentSerializer.gson()
                     val tags = TagResolver.resolver(
                         Placeholder.parsed("hat", hat.getID()),
-                        Placeholder.parsed("command", "/give @s leather_helmet{display:{Name:${gs.serialize(hat.getDisplayName())},Lore:[${gs.serialize(hat.getDescription())}]},CustomModelData:${hat.getModelData()+helmet},Unbreakable:1b}")
+                        Placeholder.parsed("command", "/give @s leather_helmet{display:{Name:${gs.serialize(hat.getDisplayName())},Lore:[${hat.getDescription().joinToString(","){ gs.serialize(it) }}]},CustomModelData:${hat.getModelData()},Unbreakable:1b}")
                     )
                     player.sendMessage(mm.deserialize(
                         "<hover:show_text:'<command>'><click:COPY_TO_CLIPBOARD:'<command>'><grey>Click here to copy a vanilla give command for the hat <i><hat></i></click></hover>",

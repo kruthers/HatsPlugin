@@ -4,78 +4,69 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
 import org.bukkit.configuration.serialization.ConfigurationSerializable
-import org.bukkit.configuration.serialization.SerializableAs
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
-class Hat: ConfigurationSerializable {
-    private val id: String
-    private var displayName: Component
-    private var modelData: Int
-    private var description: Component
+class Hat(
+    private val id: String,
+    private var displayName: Component,
+    private var modelData: Int,
+    private var description: List<Component>,
     private var dyeable: Boolean
+    ): ConfigurationSerializable {
 
-    constructor(id: String, displayName: Component, modelData: Int, description: Component, dyeable: Boolean) {
-        this.id = id
-        this.displayName = displayName
-        this.modelData = modelData
-        this.description = description
-        this.dyeable = dyeable
+    constructor(id: String, displayName: String, modelData: Int, description: String, dyeable: Boolean): this(
+        id, Component.empty(), modelData, mutableListOf(), dyeable
+    ) {
+        val mm = MiniMessage.miniMessage()
+        this.displayName = mm.deserialize(displayName)
+        this.setDescription(description)
     }
 
     //Deserializer
-    constructor(args: Map<String, Object>) {
-        val mm = MiniMessage.miniMessage()
-        val displayName = mm.deserialize(args["display_name"]!! as String)
-        val description = mm.deserialize(args["description"]!! as String)
+    @Suppress("Unused")
+    constructor(args: Map<String, Any>): this(
+        args["id"]!! as String,
+        args["display_name"]!! as String,
+        args["model_date"]!! as Int,
+        args["description"]!! as String,
+        args["dyeable"]!! as Boolean
+    )
 
-        this.id = args["id"]!! as String
-        this.displayName = displayName
-        this.modelData = args["model_date"]!! as Int
-        this.description = description
-        this.dyeable = args["dyeable"]!! as Boolean
-    }
-
-    public fun getItem(material: Material, baseId: Int): ItemStack {
-        val item = ItemStack(material, 1).also {
+    fun getItem(): ItemStack {
+        val item = ItemStack(Material.LEATHER_HELMET, 1).also {
             it.itemMeta = it.itemMeta.also { meta ->
                 meta.displayName(this.displayName)
-                meta.setCustomModelData(this.modelData + baseId)
-                meta.lore( mutableListOf(this.description))
+                meta.setCustomModelData(this.modelData)
+                meta.lore(this.description)
 
                 meta.isUnbreakable = true
-                meta.itemFlags.add(ItemFlag.HIDE_UNBREAKABLE)
+                meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES)
+                meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE)
             }
         }
 
         return item
     }
 
-    /**
-     * Gets the item display lore
-     * @return the lore formatted
-     */
-    public fun getLore(): MutableList<Component> {
+    //Getters/ Setters
+    fun getID(): String { return this.id}
+
+    fun getDisplayName(): Component { return this.displayName }
+    fun setDisplayName(name: Component) { this.displayName = name }
+    
+    fun getModelData(): Int { return this.modelData }
+    fun setModelData(modelData: Int) { this.modelData = modelData }
+
+    fun getDescription(): List<Component> { return this.description }
+    fun setDescription(description: List<Component>) { this.description = description }
+    fun setDescription(description: String) {
         val mm = MiniMessage.miniMessage()
-        return mm.serialize(this.description)
-            .split(Regex("<br>|<newline>|\n"))
-            .map { mm.deserialize(it)}.toMutableList()
+        this.description = description.split("<br>").map { mm.deserialize(it) }
     }
 
-    //Getters/ Setters
-    public fun getID(): String { return this.id}
-
-    public fun getDisplayName(): Component { return this.displayName }
-    public fun setDisplayName(name: Component) { this.displayName = name }
-    
-    public fun getModelData(): Int { return this.modelData }
-    public fun setModelData(modelData: Int) { this.modelData = modelData }
-
-    public fun getDescription(): Component { return this.description }
-    public fun setDescription(description: Component) { this.description = description }
-
-    public fun isDyeable(): Boolean { return this.dyeable }
-    public fun setDyeable(dyeable: Boolean) { this.dyeable = dyeable }
+    fun isDyeable(): Boolean { return this.dyeable }
+    fun setDyeable(dyeable: Boolean) { this.dyeable = dyeable }
 
     //overrides
     override fun toString(): String {
@@ -88,7 +79,7 @@ class Hat: ConfigurationSerializable {
         map["id"] = this.id
         map["model_date"] = this.modelData
         map["display_name"] = mm.serialize(this.displayName)
-        map["description"] = mm.serialize(this.description)
+        map["description"] = this.description.joinToString("<br>"){ mm.serialize(it) }
         map["dyeable"] = this.dyeable
 
         return map

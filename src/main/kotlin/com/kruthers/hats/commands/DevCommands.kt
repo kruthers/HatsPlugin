@@ -9,7 +9,8 @@ import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import org.bukkit.command.CommandSender
 
-class DevCommands(private val plugin: HatsPlugin, private val manager: BukkitCommandManager<CommandSender>) {
+@Suppress("Unused")
+class DevCommands(private val plugin: HatsPlugin, manager: BukkitCommandManager<CommandSender>) {
 
     init {
         val builder = manager.commandBuilder("devhat")
@@ -54,7 +55,7 @@ class DevCommands(private val plugin: HatsPlugin, private val manager: BukkitCom
 
     fun generateTestHats(start: Int) {
         for (i in start..start+18) {
-            val hat = Hat("test_$i", Component.text("Test hat #$i"), i, Component.text("Auto generated Hat"), true)
+            val hat = Hat("test_$i", "<green>Test hat #$i", i, "Auto generated Hat", true)
             plugin.addHat(hat)
         }
     }

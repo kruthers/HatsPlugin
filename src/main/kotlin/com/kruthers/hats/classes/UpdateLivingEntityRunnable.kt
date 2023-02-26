@@ -16,7 +16,7 @@ class UpdateLivingEntityRunnable(private val entity: LivingEntity, private val p
     override fun run() {
         val item = this.entity.equipment?.getItem(EquipmentSlot.HEAD)
         if (isItemAHelmet(item, this.plugin)) {
-            this.entity.equipment?.setItem(EquipmentSlot.HEAD, convertToHat(item!!, this.plugin))
+            this.entity.equipment?.setItem(EquipmentSlot.HEAD, convertToHat(item!!))
         }
     }
 }

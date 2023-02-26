@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "com.kruthers"
-version = "ALPHA-0.6.0"
+version = "1.0.0"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib"))
 
-    compileOnly("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT") {isTransitive = false}
+    compileOnly("io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.7.0") {isTransitive = false}
 
     implementation("cloud.commandframework:cloud-core:1.7.1")

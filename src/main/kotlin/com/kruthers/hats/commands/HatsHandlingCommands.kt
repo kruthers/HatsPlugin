@@ -10,12 +10,10 @@ import com.kruthers.hats.HatsPlugin
 import com.kruthers.hats.utils.HatNotFoundException
 import com.kruthers.hats.utils.NoPlayerFoundException
 import net.kyori.adventure.text.minimessage.MiniMessage
-import org.bukkit.Material
 import org.bukkit.command.CommandSender
 import org.bukkit.entity.Player
-import java.util.*
 
-class HatsHandlingCommands(private val plugin: HatsPlugin, private val manager: BukkitCommandManager<CommandSender>) {
+class HatsHandlingCommands(private val plugin: HatsPlugin, manager: BukkitCommandManager<CommandSender>) {
     private val mm = MiniMessage.miniMessage()
     private val builder = manager.commandBuilder("hats", ArgumentDescription.of("Core hats command"))
 
@@ -48,7 +46,7 @@ class HatsHandlingCommands(private val plugin: HatsPlugin, private val manager: 
 
         val hat = this.plugin.hats[id] ?: throw HatNotFoundException(id)
 
-        player.inventory.addItem(hat.getItem(Material.LEATHER_HELMET,this.plugin.getHelmetBaseID()))
+        player.inventory.addItem(hat.getItem())
         context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.getDisplayName()))
     }
 
@@ -58,7 +56,7 @@ class HatsHandlingCommands(private val plugin: HatsPlugin, private val manager: 
 
         val hat = this.plugin.hats[id] ?: throw HatNotFoundException(id)
 
-        player.inventory.addItem(hat.getItem(Material.LEATHER_HELMET,this.plugin.getHelmetBaseID()))
+        player.inventory.addItem(hat.getItem())
         context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.getDisplayName()))
     }
 

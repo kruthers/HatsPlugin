@@ -12,7 +12,7 @@ import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.classes.HatsData
 import com.kruthers.hats.commands.*
 import com.kruthers.hats.listeners.*
-import com.kruthers.hats.utils.ModelIdNotUnite
+import com.kruthers.hats.utils.ModelIdNotUnique
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
@@ -81,7 +81,7 @@ class HatsPlugin: JavaPlugin() {
             AudienceProvider.nativeAudience(),
             cmdManager
         )
-        CoreCommands(this,cmdManager, help)
+        CoreCommands(cmdManager, help)
         HatsManagementCommands(this,cmdManager)
         HatsHandlingCommands(this, cmdManager)
 
@@ -135,15 +135,6 @@ class HatsPlugin: JavaPlugin() {
         }
     }
 
-    //Hat handling
-    fun getHelmetBaseID(): Int {
-        return config.getInt("model_data_start.leather_hat")
-    }
-
-    fun getHatBaseID(): Int {
-        return config.getInt("model_data_start.leather_horse_armor")
-    }
-
     /**
      * Gets a hat using only the model data value
      * @param modelData The model data value to use, should already be adjusted
@@ -167,7 +158,7 @@ class HatsPlugin: JavaPlugin() {
     /**
      * Adds/ updates a hat on the plugin
      * @param hat The hat to add
-     * @throws ModelIdNotUnite if the hats custom model data is already in
+     * @throws ModelIdNotUnique if the hats custom model data is already in
      */
     fun addHat(hat: Hat): Boolean  {
         val modelID = hat.getModelData()
@@ -175,11 +166,9 @@ class HatsPlugin: JavaPlugin() {
 
         val oldHat = this.getHatFromModelData(modelID)
         if (oldHat != null) {
-            Bukkit.getServer().broadcast(Component.text("Found a hat with same model data"))
             if (oldHat.getID() != id) {
-                throw ModelIdNotUnite(modelID)
+                throw ModelIdNotUnique(modelID)
             } else {
-                Bukkit.getServer().broadcast(Component.text("Hat ID matches, resting model data"))
                 this.hatModelIDs.remove(oldHat.getModelData())
             }
         }
