@@ -6,12 +6,11 @@ import cloud.commandframework.arguments.standard.StringArgument
 import cloud.commandframework.bukkit.BukkitCommandManager
 import cloud.commandframework.context.CommandContext
 import cloud.commandframework.meta.CommandMeta
-import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.classes.Hat
+import com.kruthers.hats.commands.arguments.HatArgument
 import com.kruthers.hats.commands.arguments.UnusedHatModelArgument
-import com.kruthers.hats.utils.HatNotFoundException
 import com.kruthers.hats.utils.ModelIdNotUnique
-import com.kruthers.hats.utils.isItemAHelmet
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
 import net.kyori.adventure.text.format.TextDecoration
@@ -53,7 +52,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
             .meta(CommandMeta.DESCRIPTION, "Add a new hat")
             .literal("add")
             .argument(StringArgument.of("name"))
-            .argument(UnusedHatModelArgument.of("moduleData", plugin))
+            .argument(UnusedHatModelArgument.of("moduleData"))
             .argument(StringArgument.quoted("displayName"))
             .argument(StringArgument.quoted("description"))
             .argument(BooleanArgument.optional("dyeable", true))
@@ -62,7 +61,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         )
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Adds a new hat from a hat item already")
-            .literal("add_from_item")
+            .literal("import")
             .argument(StringArgument.of("name"))
             .argument(BooleanArgument.optional("dyeable", true))
             .senderType(Player::class.java)
@@ -72,14 +71,14 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Remove a new hat")
             .literal("remove")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .permission("hats.remove")
             .handler(this::removeHat)
         )
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Modify a hat's display name")
             .literal("modify")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .literal("displayName")
             .argument(StringArgument.greedy("input"))
             .permission("hats.modify")
@@ -88,7 +87,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Modify a hat's description")
             .literal("modify")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .literal("description")
             .argument(StringArgument.greedy("input"))
             .permission("hats.modify")
@@ -97,16 +96,16 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Modify a hat's custom model data ID")
             .literal("modify")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .literal("modelData")
-            .argument(UnusedHatModelArgument.of("input", plugin))
+            .argument(UnusedHatModelArgument.of("input"))
             .permission("hats.modify")
             .handler(this::modifyHatModelID)
         )
         manager.command(builder
             .meta(CommandMeta.DESCRIPTION, "Modify if a hat is dyeable")
             .literal("modify")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .literal("dyeable")
             .argument(BooleanArgument.of("input"))
             .permission("hats.modify")
@@ -122,7 +121,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val description: String = context.get("description")
         val dyable: Boolean = context.get("dyeable")
         val hat = Hat(id, displayName, customModelData, description, dyable)
-        this.plugin.addHat(hat)
+        HatsPlugin.addHat(hat)
 
         context.sender.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
     }
@@ -137,116 +136,94 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         if (item.type == Material.AIR) {
             player.sendMessage(Component.text("You must have a hat item in your hand to convert", NamedTextColor.RED))
             return
-        } else if (isItemAHelmet(item, this.plugin)) {
+        } else if (item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData()) {
             val customModelData = item.itemMeta.customModelData - this.plugin.config.getInt("model_data_start.leather_hat")
             val displayName = item.itemMeta.displayName()?: Component.text(id)
             val lore = item.lore()?: mutableListOf()
 
             val hat = Hat(id, displayName, customModelData, lore, dyable)
             try {
-                this.plugin.addHat(hat)
+                HatsPlugin.addHat(hat)
                 player.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
             } catch (error: ModelIdNotUnique) {
                 player.sendMessage(Component.text("Unable to create hat, looks like the custom module data is already in use", NamedTextColor.RED))
             }
-
+        } else {
+            player.sendMessage(Component.text("Unable to create hat, item in hand is not reconised", NamedTextColor.RED))
         }
 
     }
 
     private fun removeHat(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
-        val hat = this.plugin.removeHat(id)
-        if (hat != null) {
-            val tags = TagResolver.resolver(
-                Placeholder.parsed("command", "/hats add ${hat.getID()} ${hat.getModelData()} ${hat.getDisplayName()} ${hat.getDescription()} ${hat.isDyeable()}")
-            )
-            context.sender.sendMessage(mm.deserialize("<red>Removed hat $id from the system. <italic>Is this a mistake? Get it back <u><click:suggest_command:'<command>'>here</click></u>", tags))
-        } else {
-            throw HatNotFoundException(id)
-        }
+        val hat: Hat = context.get("hat")
+        HatsPlugin.removeHat(hat.id)
+        val tags = TagResolver.resolver(
+            Placeholder.parsed("command", "/hats add ${hat.id} ${hat.modelData} ${mm.serialize(hat.displayName)} \"${hat.getDescription().joinToString { "<br>" }}\" ${hat.dyeable}")
+        )
+        context.sender.sendMessage(mm.deserialize("<red>Removed hat ${hat.id} from the system. <italic>Is this a mistake? Get it back <u><click:suggest_command:'<command>'>here</click></u>", tags))
     }
 
     private fun modifyHatDisplayName(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val displayName: String = context.get("input")
 
-        val hat = this.plugin.hats[id]
-        if (hat != null) {
-            hat.setDisplayName(mm.deserialize(displayName))
-            this.plugin.hats[id] = hat
-            val tags = TagResolver.resolver(
-                Placeholder.parsed("name", id),
-                Placeholder.parsed("display_name", displayName)
-            )
-            context.sender.sendMessage(mm.deserialize("<green>Successfully updated display name of <name> to: <gray>\"<display_name>\"", tags))
-        } else {
-            throw HatNotFoundException(id)
-        }
+        hat.displayName = mm.deserialize(displayName)
+        HatsPlugin.hats[hat.id] = hat
+        val tags = TagResolver.resolver(
+            Placeholder.parsed("name", hat.id),
+            Placeholder.parsed("display_name", displayName)
+        )
+        context.sender.sendMessage(mm.deserialize("<green>Successfully updated display name of <name> to: <gray>\"<display_name>\"", tags))
+
     }
 
     private fun modifyHatDescription(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val description: String = context.get("input")
 
-        val hat = this.plugin.hats[id]
-        if (hat != null) {
-            hat.setDescription(description)
-            this.plugin.hats[id] = hat
-            val tags = TagResolver.resolver(
-                Placeholder.parsed("name", id),
-                Placeholder.parsed("description", description)
-            )
-            context.sender.sendMessage(mm.deserialize("<green>Successfully updated description of <name> to: <gray>\"<description>\"", tags))
-        } else {
-            throw HatNotFoundException(id)
-        }
+        hat.setDescription(description)
+        HatsPlugin.hats[hat.id] = hat
+        val tags = TagResolver.resolver(
+            Placeholder.parsed("name", hat.id),
+            Placeholder.parsed("description", description)
+        )
+        context.sender.sendMessage(mm.deserialize("<green>Successfully updated description of <name> to: <gray>\"<description>\"", tags))
 
     }
 
     private fun modifyHatModelID(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val customModelData: Int = context.get("input")
 
-        val hat = this.plugin.hats[id]
-        if (hat != null) {
-            hat.setModelData(customModelData)
-            this.plugin.addHat(hat)
-            val tags = TagResolver.resolver(
-                Placeholder.parsed("name", id),
-                Placeholder.parsed("model_data", "$customModelData")
-            )
-            context.sender.sendMessage(mm.deserialize("<green>Successfully updated custom model data of <name> to: <gray><model_data>", tags))
-        } else {
-            throw HatNotFoundException(id)
-        }
+        hat.modelData = customModelData
+        HatsPlugin.hats[hat.id] = hat
+        val tags = TagResolver.resolver(
+            Placeholder.parsed("name", hat.id),
+            Placeholder.parsed("model_data", "$customModelData")
+        )
+        context.sender.sendMessage(mm.deserialize("<green>Successfully updated custom model data of <name> to: <gray><model_data>", tags))
     }
 
     private fun modifyHatDyeAble(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val dyeable: Boolean = context.get("input")
 
-        val hat = this.plugin.hats[id]
-        if (hat != null) {
-            hat.setDyeable(dyeable)
-            this.plugin.hats[id] = hat
-            val tags = TagResolver.resolver(
-                Placeholder.parsed("name", id),
-            )
-            if (dyeable) {
-                context.sender.sendMessage(mm.deserialize("<green>Hat <name> is now dye-able", tags))
-            } else {
-                context.sender.sendMessage(mm.deserialize("<red>Hat <name> is no longer dye-able. Warning this may cause issues with people who already have it", tags))
-            }
+        hat.dyeable = dyeable
+        HatsPlugin.hats[hat.id] = hat
+        val tags = TagResolver.resolver(
+            Placeholder.parsed("name", hat.id),
+        )
+        if (dyeable) {
+            context.sender.sendMessage(mm.deserialize("<green>Hat <name> is now dye-able", tags))
         } else {
-            throw HatNotFoundException(id)
+            context.sender.sendMessage(mm.deserialize("<red>Hat <name> is no longer dye-able. Warning this may cause issues with people who already have it", tags))
         }
     }
 
     private fun showMenu(context: CommandContext<CommandSender>) {
         val player = context.sender as Player
 
-        val hats: ArrayList<Hat> = ArrayList(plugin.hats.values.sortedBy { it.getModelData() })
+        val hats = HatsPlugin.hats.values.sortedBy { it.modelData }
 
         val menu = buildChestInterface {
             title = Component.text("Hats Menu")
@@ -309,9 +286,9 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         return hat.getItem().also { it.also {
             val lore: MutableList<Component> = mutableListOf(
                 Component.text("Hat ID: ", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false)
-                        .append(Component.text(hat.getID(), NamedTextColor.GRAY)),
+                        .append(Component.text(hat.id, NamedTextColor.GRAY)),
                 Component.text("Custom Model Data: ", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC, false)
-                        .append(Component.text(hat.getModelData(), NamedTextColor.GRAY)),
+                        .append(Component.text(hat.modelData, NamedTextColor.GRAY)),
                 Component.empty()
             )
             lore.addAll(hat.getDescription())
@@ -321,7 +298,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
             when (handler.cause().click) {
                 ClickType.RIGHT -> {
                     val tags = TagResolver.resolver(
-                        Placeholder.parsed("hat", hat.getID()),
+                        Placeholder.parsed("hat", hat.id),
                         Placeholder.parsed("command", "/hat modify <hat>")
                     )
                     player.sendMessage(mm.deserialize(
@@ -333,7 +310,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
                 ClickType.LEFT -> {
                     if (player.hasPermission("hats.give")) {
                         player.inventory.addItem(hat.getItem())
-                        player.sendMessage(mm.deserialize("<green><i>You have been given 1x ${hat.getID()}"))
+                        player.sendMessage(mm.deserialize("<green><i>You have been given 1x ${hat.id}"))
                     } else {
                         player.sendMessage(Bukkit.getServer().permissionMessage())
                     }
@@ -343,8 +320,8 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
                     //gives a copy command for the vanilla give command
                     val gs = GsonComponentSerializer.gson()
                     val tags = TagResolver.resolver(
-                        Placeholder.parsed("hat", hat.getID()),
-                        Placeholder.parsed("command", "/give @s leather_helmet{display:{Name:${gs.serialize(hat.getDisplayName())},Lore:[${hat.getDescription().joinToString(","){ gs.serialize(it) }}]},CustomModelData:${hat.getModelData()},Unbreakable:1b}")
+                        Placeholder.parsed("hat", hat.id),
+                        Placeholder.parsed("command", "/give @s leather_helmet{display:{Name:${gs.serialize(hat.displayName)},Lore:[${hat.getDescription().joinToString(","){ gs.serialize(it) }}]},CustomModelData:${hat.modelData},Unbreakable:1b}")
                     )
                     player.sendMessage(mm.deserialize(
                         "<hover:show_text:'<command>'><click:COPY_TO_CLIPBOARD:'<command>'><grey>Click here to copy a vanilla give command for the hat <i><hat></i></click></hover>",

@@ -2,8 +2,9 @@ name: Hats
 version: '${version}'
 main: com.kruthers.hats.HatsPlugin
 api-version: 1.19
-prefix: PChat
-depend: [ ProtocolLib ]
+depend:
+  - PandaLib
+  - ProtocolLib
 authors: [ kruthers ]
 description: Hats! What more do you want!
 website: www.kruthers.com

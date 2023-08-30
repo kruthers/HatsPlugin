@@ -25,19 +25,21 @@ class EquipmentPacket(private val pl: HatsPlugin):
         val packet = WrapperPlayServerEntityEquipment(event.packet.deepClone())
         val item = packet.getItem(ItemSlot.HEAD)
 
-        if (this.pl.hasHatsDisabled(receiver) && isItemAHat(item, this.pl)) {
+        if (this.pl.hasHatsDisabled(receiver) && isItemAHat(item)) {
             packet.setSlotStackPair(ItemSlot.HEAD, item!!.clone().also {
                 it.type = Material.LEATHER_HELMET
             })
             event.packet = packet.handle
-        } else if (!this.pl.hasHatsDisabled(receiver) && isItemAHelmet(item, this.pl)) {
+        } else if (!this.pl.hasHatsDisabled(receiver) && isItemAHelmet(item)) {
             val hat = convertToHat(item!!.clone())
             packet.setSlotStackPair(ItemSlot.HEAD, hat)
             event.packet = packet.handle
         }
     }
 
+    @Suppress("UNUSED")
     internal class WrapperPlayServerEntityEquipment : AbstractPacket {
+
         constructor() : super(PacketContainer(TYPE), TYPE) {
             handle.modifier.writeDefaults()
         }

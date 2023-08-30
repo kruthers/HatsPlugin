@@ -36,8 +36,8 @@ class DevCommands(private val plugin: HatsPlugin, manager: BukkitCommandManager<
 
 
     private fun listCommand(context: CommandContext<CommandSender>) {
-        plugin.hatModelIDs.forEach { modelData, id ->
-            context.sender.sendMessage(Component.text("$modelData: $id"))
+        HatsPlugin.hats.values.sortedBy { it.modelData }.forEach { hat ->
+            context.sender.sendMessage(Component.text("${hat.modelData}: ${hat.id}"))
         }
     }
 
@@ -56,17 +56,17 @@ class DevCommands(private val plugin: HatsPlugin, manager: BukkitCommandManager<
     fun generateTestHats(start: Int) {
         for (i in start..start+18) {
             val hat = Hat("test_$i", "<green>Test hat #$i", i, "Auto generated Hat", true)
-            plugin.addHat(hat)
+            HatsPlugin.addHat(hat)
         }
     }
 
     private fun checkCommand(context: CommandContext<CommandSender>) {
         val id: Int = context.get("id")
-        val hat = this.plugin.getHatFromModelData(id)
+        val hat = HatsPlugin.getHatFromModelData(id)
         if (hat == null) {
             context.sender.sendMessage(Component.text("No hat with provided id found", NamedTextColor.RED))
         } else {
-            context.sender.sendMessage(Component.text("Got hat ${hat.getID()} with the model data $id", NamedTextColor.GREEN))
+            context.sender.sendMessage(Component.text("Got hat ${hat.id} with the model data $id", NamedTextColor.GREEN))
         }
     }
 

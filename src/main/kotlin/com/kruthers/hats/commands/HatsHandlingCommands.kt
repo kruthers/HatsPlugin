@@ -1,13 +1,13 @@
 package com.kruthers.hats.commands
 
 import cloud.commandframework.ArgumentDescription
-import cloud.commandframework.arguments.standard.StringArgument
 import cloud.commandframework.bukkit.BukkitCommandManager
 import cloud.commandframework.bukkit.arguments.selector.SinglePlayerSelector
 import cloud.commandframework.bukkit.parsers.selector.SinglePlayerSelectorArgument
 import cloud.commandframework.context.CommandContext
 import com.kruthers.hats.HatsPlugin
-import com.kruthers.hats.utils.HatNotFoundException
+import com.kruthers.hats.classes.Hat
+import com.kruthers.hats.commands.arguments.HatArgument
 import com.kruthers.hats.utils.NoPlayerFoundException
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.command.CommandSender
@@ -20,14 +20,14 @@ class HatsHandlingCommands(private val plugin: HatsPlugin, manager: BukkitComman
     init {
         manager.command(builder
             .literal("give")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .senderType(Player::class.java)
             .permission("hats.give")
             .handler(this::giveHatCommand)
         )
         manager.command(builder
             .literal("give")
-            .argument(StringArgument.of("name"))
+            .argument(HatArgument.of("hat"))
             .argument(SinglePlayerSelectorArgument.of("player"))
             .permission("hats.give")
             .handler(this::giveOtherHatCommand)
@@ -41,23 +41,19 @@ class HatsHandlingCommands(private val plugin: HatsPlugin, manager: BukkitComman
     }
 
     private fun giveOtherHatCommand(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val player: Player = context.get<SinglePlayerSelector>("player").player ?: throw NoPlayerFoundException()
 
-        val hat = this.plugin.hats[id] ?: throw HatNotFoundException(id)
-
         player.inventory.addItem(hat.getItem())
-        context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.getDisplayName()))
+        context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.displayName))
     }
 
     private fun giveHatCommand(context: CommandContext<CommandSender>) {
-        val id: String = context.get("name")
+        val hat: Hat = context.get("hat")
         val player = context.sender as Player
 
-        val hat = this.plugin.hats[id] ?: throw HatNotFoundException(id)
-
         player.inventory.addItem(hat.getItem())
-        context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.getDisplayName()))
+        context.sender.sendMessage(mm.deserialize("<gay><italic>Gave ${player.name} hat ").append(hat.displayName))
     }
 
     private fun enableHats(context: CommandContext<CommandSender>) {

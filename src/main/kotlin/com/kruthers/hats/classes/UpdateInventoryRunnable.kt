@@ -9,7 +9,7 @@ import org.bukkit.entity.HumanEntity
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.scheduler.BukkitRunnable
 
-class UpdateInventoryRunnable(private val player: HumanEntity, private val plugin: HatsPlugin): BukkitRunnable() {
+class UpdateInventoryRunnable(private val player: HumanEntity, plugin: HatsPlugin): BukkitRunnable() {
     init {
         this.runTaskLater(plugin,1)
     }
@@ -18,20 +18,20 @@ class UpdateInventoryRunnable(private val player: HumanEntity, private val plugi
         //check main inv for any non helmet hats
         for (i in 0..35) {
             val item = player.inventory.getItem(i)
-            if (isItemAHat(item, plugin)) {
+            if (isItemAHat(item)) {
                 player.inventory.setItem(i, convertToHelmet(item!!))
             }
         }
 
         //check off hand
         var item = player.inventory.getItem(EquipmentSlot.OFF_HAND)
-        if (isItemAHat(item, plugin)) {
+        if (isItemAHat(item)) {
             player.inventory.setItem(EquipmentSlot.OFF_HAND, convertToHelmet(item))
         }
 
         //check head
         item = player.inventory.getItem(EquipmentSlot.HEAD)
-        if (isItemAHelmet(item, plugin)) {
+        if (isItemAHelmet(item)) {
             player.inventory.setItem(EquipmentSlot.HEAD, convertToHat(item))
         }
     }

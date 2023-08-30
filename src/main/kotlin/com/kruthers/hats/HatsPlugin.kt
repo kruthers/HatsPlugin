@@ -25,8 +25,6 @@ import java.util.function.Function
 
 
 class HatsPlugin: JavaPlugin() {
-    val hats: HashMap<String, Hat> = HashMap()
-    val hatModelIDs: HashMap<Int, String> = HashMap()
     private var hatsDisabled: Set<Player> = hashSetOf()
     private var forceEnabled: Set<UUID> = hashSetOf()
     private lateinit var protocolManager: ProtocolManager
@@ -34,6 +32,49 @@ class HatsPlugin: JavaPlugin() {
 
     init {
         ConfigurationSerialization.registerClass(Hat::class.java, "Hat")
+    }
+
+    companion object {
+        val hats: HashMap<String, Hat> = HashMap()
+
+        /**
+         * Gets a hat using only the model data value
+         * @param modelData The model data value to use, should already be adjusted
+         * @return the hat or null if there is no hat with that id
+         */
+        fun getHatFromModelData(modelData: Int): Hat? {
+            return this.hats.values.firstOrNull{ it.modelData == modelData }
+        }
+
+        /**
+         * Adds/ updates a hat on the plugin
+         * @param hat The hat to add
+         * @throws ModelIdNotUnique if the hats custom model data is already in
+         */
+        fun addHat(hat: Hat): Boolean  {
+            val oldHat = this.getHatFromModelData(hat.modelData)
+            if (oldHat != null && oldHat.id != hat.id) {
+                throw ModelIdNotUnique(hat.modelData)
+            }
+
+            this.hats[hat.id] = hat
+            return true
+        }
+
+        /**
+         * Removes a hat from the plugin
+         * @param id The id of the hat to remove
+         * @return The hat if it was removed, null if no hat was removed
+         */
+        fun removeHat(id: String): Hat? {
+            val hat = this.hats[id]
+            return if (hat != null) {
+                this.hats.remove(id)
+                hat
+            } else {
+                null
+            }
+        }
     }
 
     override fun onEnable() {
@@ -51,7 +92,6 @@ class HatsPlugin: JavaPlugin() {
         this.saveConfig()
 
         this.hatsData.init()
-        this.hats.putAll(this.hatsData.getHats())
 
         this.logger.info("Registering Commands")
         //create command manager
@@ -100,7 +140,7 @@ class HatsPlugin: JavaPlugin() {
 
     override fun onDisable() {
         this.logger.info("Saving hat data")
-        this.hatsData.saveHats(this.hats)
+        this.hatsData.saveHats()
     }
 
     //Hat display tracking
@@ -126,71 +166,13 @@ class HatsPlugin: JavaPlugin() {
         this.reloadEntities(player)
     }
 
+    @Suppress("UnstableApiUsage")
     private fun reloadEntities(player: Player) {
         val viewDistance = ((player.viewDistance + 1)*16).toDouble()
         val entites = player.getNearbyEntities(viewDistance,viewDistance,356.0)
         entites.forEach {
             player.hideEntity(this, it)
             player.showEntity(this, it)
-        }
-    }
-
-    /**
-     * Gets a hat using only the model data value
-     * @param modelData The model data value to use, should already be adjusted
-     * @return the hat or null if there is no hat with that id
-     */
-    fun getHatFromModelData(modelData: Int): Hat? {
-        val id = this.hatModelIDs[modelData]
-
-        if (id != null) {
-            val hat = this.hats[id]
-            if (hat != null) {
-                return hat
-            } else {
-                this.hatModelIDs.remove(modelData)
-            }
-        }
-
-        return null
-    }
-
-    /**
-     * Adds/ updates a hat on the plugin
-     * @param hat The hat to add
-     * @throws ModelIdNotUnique if the hats custom model data is already in
-     */
-    fun addHat(hat: Hat): Boolean  {
-        val modelID = hat.getModelData()
-        val id = hat.getID()
-
-        val oldHat = this.getHatFromModelData(modelID)
-        if (oldHat != null) {
-            if (oldHat.getID() != id) {
-                throw ModelIdNotUnique(modelID)
-            } else {
-                this.hatModelIDs.remove(oldHat.getModelData())
-            }
-        }
-
-        this.hats[id] = hat
-        this.hatModelIDs[modelID] = id
-        return true
-    }
-
-    /**
-     * Removes a hat from the plugin
-     * @param id The id of the hat to remove
-     * @return The hat if it was removed, null if no hat was removed
-     */
-    fun removeHat(id: String): Hat? {
-        val hat = this.hats[id]
-        return if (hat != null) {
-            this.hats.remove(id)
-            this.hatModelIDs
-            hat
-        } else {
-            null
         }
     }
 

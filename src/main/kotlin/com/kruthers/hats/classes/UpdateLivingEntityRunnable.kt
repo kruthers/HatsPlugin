@@ -7,7 +7,7 @@ import org.bukkit.entity.LivingEntity
 import org.bukkit.inventory.EquipmentSlot
 import org.bukkit.scheduler.BukkitRunnable
 
-class UpdateLivingEntityRunnable(private val entity: LivingEntity, private val plugin: HatsPlugin) : BukkitRunnable() {
+class UpdateLivingEntityRunnable(private val entity: LivingEntity, plugin: HatsPlugin) : BukkitRunnable() {
 
     init {
         this.runTaskLater(plugin, 1)
@@ -15,7 +15,7 @@ class UpdateLivingEntityRunnable(private val entity: LivingEntity, private val p
 
     override fun run() {
         val item = this.entity.equipment?.getItem(EquipmentSlot.HEAD)
-        if (isItemAHelmet(item, this.plugin)) {
+        if (isItemAHelmet(item)) {
             this.entity.equipment?.setItem(EquipmentSlot.HEAD, convertToHat(item!!))
         }
     }

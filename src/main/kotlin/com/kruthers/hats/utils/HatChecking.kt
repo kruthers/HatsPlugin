@@ -5,12 +5,12 @@ import org.bukkit.Material
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
-fun isItemAHat(item: ItemStack?, plugin: HatsPlugin): Boolean {
-    return (item != null && item.type == Material.LEATHER_HORSE_ARMOR && item.itemMeta.hasCustomModelData() && plugin.getHatFromModelData(item.itemMeta.customModelData) != null)
+fun isItemAHat(item: ItemStack?): Boolean {
+    return (item != null && item.type == Material.LEATHER_HORSE_ARMOR && item.itemMeta.hasCustomModelData() && HatsPlugin.getHatFromModelData(item.itemMeta.customModelData) != null)
 }
 
-fun isItemAHelmet(item: ItemStack?, plugin: HatsPlugin): Boolean {
-    return (item != null && item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData() && plugin.getHatFromModelData(item.itemMeta.customModelData) != null)
+fun isItemAHelmet(item: ItemStack?): Boolean {
+    return (item != null && item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData() && HatsPlugin.getHatFromModelData(item.itemMeta.customModelData) != null)
 }
 
 fun convertToHat(helmet: ItemStack): ItemStack {

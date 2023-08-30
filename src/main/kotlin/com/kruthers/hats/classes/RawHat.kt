@@ -10,10 +10,10 @@ class RawHat(
     companion object {
         fun fromHat(hat: Hat): RawHat {
             val mm = MiniMessage.miniMessage()
-            val displayName = mm.serialize(hat.getDisplayName())
+            val displayName = mm.serialize(hat.displayName)
             val description = hat.getDescription().joinToString("<br>"){ mm.serialize(it) }
 
-            return RawHat(hat.getID(), displayName, hat.getModelData(), description, hat.isDyeable())
+            return RawHat(hat.id, displayName, hat.modelData, description, hat.dyeable)
         }
     }
 

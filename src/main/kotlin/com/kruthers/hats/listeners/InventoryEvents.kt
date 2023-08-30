@@ -31,26 +31,26 @@ class InventoryEvents(val plugin: HatsPlugin): Listener {
         val player = event.whoClicked
         if (slot == 39 && singleSlotActions.contains(event.action) && !event.isCancelled) {
             val item = player.inventory.getItem(39)
-            if (isItemAHat(item, plugin)) {
+            if (isItemAHat(item)) {
                 item!!
                 player.inventory.setItem(EquipmentSlot.HEAD, convertToHelmet(item))
             }
         }
 
-        UpdateInventoryRunnable(player, plugin)
+        UpdateInventoryRunnable(player, this.plugin)
     }
 
     @EventHandler
     fun onItemPickup(event: PlayerAttemptPickupItemEvent) {
         val item = event.item.itemStack
-        if (isItemAHat(item, plugin) && event.isCancelled) {
+        if (isItemAHat(item) && event.isCancelled) {
             event.item.itemStack = convertToHelmet(item)
         }
     }
 
     @EventHandler
     fun onEnchant(event: EnchantItemEvent) {
-        if (isItemAHelmet(event.item, this.plugin) && !this.plugin.config.getBoolean("hat_enchating")) {
+        if (isItemAHelmet(event.item) && !this.plugin.config.getBoolean("hat_enchating")) {
             event.isCancelled = true
             event.enchanter.sendMessage(Component.text("You are unable to enchant hats", NamedTextColor.RED))
         }
@@ -60,7 +60,7 @@ class InventoryEvents(val plugin: HatsPlugin): Listener {
     fun onDeath(event: PlayerDeathEvent) {
         if (!plugin.config.getBoolean("soul_bound")) return
         event.drops.forEach { drop ->
-            if (isItemAHelmet(drop, this.plugin) || isItemAHat(drop, this.plugin)) {
+            if (isItemAHelmet(drop) || isItemAHat(drop)) {
                 event.drops.remove(drop)
                 event.itemsToKeep.add(drop)
             }

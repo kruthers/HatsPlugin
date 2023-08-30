@@ -20,6 +20,9 @@ class HatsData(private val plugin: HatsPlugin) {
 
         //start runner
         this.isInitialised = true
+
+        //load hats
+        this.loadHats()
     }
 
     private fun loadConfig(): Boolean {
@@ -52,19 +55,19 @@ class HatsData(private val plugin: HatsPlugin) {
         data.load(file)
     }
 
-    fun getHats(): HashMap<String, Hat> {
+    fun loadHats() {
         val hats: HashMap<String, Hat> = hashMapOf()
         this.data.getList("hats")?.forEach { it ->
             if (it is Hat) {
-                hats[it.getID()] = it
+                hats[it.id] = it
             }
         }
-        return hats
+        HatsPlugin.hats.putAll(hats)
     }
 
-    fun saveHats(hats: HashMap<String, Hat>) {
+    fun saveHats() {
         if (isInitialised) {
-            this.data.set("hats", hats.values.toList())
+            this.data.set("hats", HatsPlugin.hats.values.toList())
             this.data.save(this.file)
             this.plugin.logger.info("Saved hats")
         }

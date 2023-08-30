@@ -19,12 +19,11 @@ class UnusedHatModelArgument<C: Any>(
     name: String,
     defaultValue: String,
     suggestionsProvider: BiFunction<CommandContext<C>, String, MutableList<String>>?,
-    defaultDescription: ArgumentDescription,
-    plugin: HatsPlugin
+    defaultDescription: ArgumentDescription
 ) : CommandArgument<C, Int>(
     required,
     name,
-    UnusedHatModelParser(plugin),
+    UnusedHatModelParser(),
     defaultValue,
     Int::class.java,
     suggestionsProvider,
@@ -32,31 +31,33 @@ class UnusedHatModelArgument<C: Any>(
 ) {
 
     companion object {
-        fun <C : Any> newBuilder(name: String, plugin: HatsPlugin): Builder<C> {
-            return Builder(name, plugin)
+        fun <C : Any> newBuilder(name: String): Builder<C> {
+            return Builder(name)
         }
 
-        fun <C : Any> of(name: String, plugin: HatsPlugin): CommandArgument<C, Int> {
-            return newBuilder<C>(name, plugin).asRequired().build()
+        fun <C : Any> of(name: String): CommandArgument<C, Int> {
+            return newBuilder<C>(name).asRequired().build()
         }
 
-        fun <C: Any> optional(name: String, plugin: HatsPlugin): CommandArgument<C, Int> {
-            return newBuilder<C>(name, plugin).asOptional().build()
+        @Suppress("UNUSED")
+        fun <C: Any> optional(name: String): CommandArgument<C, Int> {
+            return newBuilder<C>(name).asOptional().build()
         }
 
-        fun <C: Any> optional(name: String, defaultPlayer: String, plugin: HatsPlugin): CommandArgument<C, Int> {
-            return newBuilder<C>(name, plugin).asOptionalWithDefault(defaultPlayer).build()
+        @Suppress("UNUSED")
+        fun <C: Any> optional(name: String, defaultPlayer: String): CommandArgument<C, Int> {
+            return newBuilder<C>(name).asOptionalWithDefault(defaultPlayer).build()
         }
 
-        class Builder<C : Any> (name: String, val plugin: HatsPlugin) : CommandArgument.Builder<C, Int>(Int::class.java, name) {
+        class Builder<C : Any> (name: String) : CommandArgument.Builder<C, Int>(Int::class.java, name) {
             override fun build(): CommandArgument<C, Int> {
                 return UnusedHatModelArgument(this.isRequired, this.name, this.defaultValue,
-                    this.suggestionsProvider, this.defaultDescription, this.plugin
+                    this.suggestionsProvider, this.defaultDescription
                 )
             }
         }
 
-        class UnusedHatModelParser<C: Any>(val plugin: HatsPlugin): ArgumentParser<C, Int> {
+        class UnusedHatModelParser<C: Any>(): ArgumentParser<C, Int> {
             override fun parse(
                 commandContext: CommandContext<C>,
                 inputQueue: Queue<String>
@@ -67,7 +68,7 @@ class UnusedHatModelArgument<C: Any>(
 
                 val value: Int = try {
                     val number = input.toInt()
-                    if (number < 0 || number > Int.MAX_VALUE) {
+                    if (number < 0) {
                         return ArgumentParseResult.failure(InvalidNumberException(commandContext, input))
                     }
                     inputQueue.remove()
@@ -76,7 +77,7 @@ class UnusedHatModelArgument<C: Any>(
                     return ArgumentParseResult.failure(InvalidNumberException(commandContext, input))
                 }
 
-                val hat = plugin.getHatFromModelData(value)
+                val hat = HatsPlugin.getHatFromModelData(value)
                 return if (hat == null) {
                     ArgumentParseResult.success(value)
                 } else {

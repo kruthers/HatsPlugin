@@ -1,5 +1,7 @@
 package com.kruthers.hats.classes
 
+import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.utils.ModelIdNotUnique
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
 import org.bukkit.Material
@@ -8,12 +10,21 @@ import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
 class Hat(
-    private val id: String,
-    private var displayName: Component,
-    private var modelData: Int,
+    val id: String,
+    var displayName: Component,
+    modelData: Int,
     private var description: List<Component>,
-    private var dyeable: Boolean
+    var dyeable: Boolean
     ): ConfigurationSerializable {
+
+    var modelData: Int = modelData
+        set(value) {
+            val oldHat = HatsPlugin.getHatFromModelData(value)
+            if (oldHat != null &&  oldHat.id != this.id) {
+                throw ModelIdNotUnique(value)
+            }
+            field = value
+        }
 
     constructor(id: String, displayName: String, modelData: Int, description: String, dyeable: Boolean): this(
         id, Component.empty(), modelData, mutableListOf(), dyeable
@@ -50,27 +61,17 @@ class Hat(
     }
 
     //Getters/ Setters
-    fun getID(): String { return this.id}
-
-    fun getDisplayName(): Component { return this.displayName }
-    fun setDisplayName(name: Component) { this.displayName = name }
-    
-    fun getModelData(): Int { return this.modelData }
-    fun setModelData(modelData: Int) { this.modelData = modelData }
-
     fun getDescription(): List<Component> { return this.description }
+    @Suppress("UNUSED")
     fun setDescription(description: List<Component>) { this.description = description }
     fun setDescription(description: String) {
         val mm = MiniMessage.miniMessage()
         this.description = description.split("<br>").map { mm.deserialize(it) }
     }
 
-    fun isDyeable(): Boolean { return this.dyeable }
-    fun setDyeable(dyeable: Boolean) { this.dyeable = dyeable }
-
     //overrides
     override fun toString(): String {
-        return this.getID()
+        return this.id
     }
 
     override fun serialize(): MutableMap<String, Any> {
