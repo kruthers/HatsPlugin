@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.incendo.interfaces.paper.PaperInterfaceListeners
 import java.util.*
 import java.util.function.Function
+import java.util.logging.Logger
 
 
 class HatsPlugin: JavaPlugin() {
@@ -101,8 +102,12 @@ class HatsPlugin: JavaPlugin() {
             Function.identity(),
             Function.identity()
         )
-        if (cmdManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
-            cmdManager.registerBrigadier()
+        try {
+            if (cmdManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
+                cmdManager.registerBrigadier()
+            }
+        } catch (err: Exception) {
+            this.logger.warning("Failed to link with brigadier")
         }
         MinecraftExceptionHandler<CommandSender>()
             .withInvalidSyntaxHandler()
