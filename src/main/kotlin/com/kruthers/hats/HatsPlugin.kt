@@ -102,13 +102,6 @@ class HatsPlugin: JavaPlugin() {
             Function.identity(),
             Function.identity()
         )
-        try {
-            if (cmdManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
-                cmdManager.registerBrigadier()
-            }
-        } catch (err: Exception) {
-            this.logger.warning("Failed to link with brigadier")
-        }
         MinecraftExceptionHandler<CommandSender>()
             .withInvalidSyntaxHandler()
             .withInvalidSenderHandler()
@@ -133,6 +126,14 @@ class HatsPlugin: JavaPlugin() {
         //DEV
 //        val dev = DevCommands(this, cmdManager)
 //        if (hats.size == 0) dev.generateTestHats(1)
+
+        try {
+            if (cmdManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
+                cmdManager.registerBrigadier()
+            }
+        } catch (err: Exception) {
+            this.logger.warning("Failed to link with brigadier")
+        }
 
         this.logger.info("Registering listeners")
         PaperInterfaceListeners.install(this)
