@@ -1,6 +1,5 @@
 package com.kruthers.hats
 
-import cloud.commandframework.bukkit.CloudBukkitCapabilities
 import cloud.commandframework.execution.CommandExecutionCoordinator
 import cloud.commandframework.minecraft.extras.AudienceProvider
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler
@@ -10,8 +9,13 @@ import com.comphenix.protocol.ProtocolLibrary
 import com.comphenix.protocol.ProtocolManager
 import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.classes.HatsData
-import com.kruthers.hats.commands.*
-import com.kruthers.hats.listeners.*
+import com.kruthers.hats.commands.CoreCommands
+import com.kruthers.hats.commands.HatsHandlingCommands
+import com.kruthers.hats.commands.HatsManagementCommands
+import com.kruthers.hats.listeners.EquipmentPacket
+import com.kruthers.hats.listeners.InteractionEvents
+import com.kruthers.hats.listeners.InventoryEvents
+import com.kruthers.hats.listeners.ResourcePackListeners
 import com.kruthers.hats.utils.ModelIdNotUnique
 import net.kyori.adventure.text.Component
 import org.bukkit.Bukkit
@@ -22,7 +26,6 @@ import org.bukkit.plugin.java.JavaPlugin
 import org.incendo.interfaces.paper.PaperInterfaceListeners
 import java.util.*
 import java.util.function.Function
-import java.util.logging.Logger
 
 
 class HatsPlugin: JavaPlugin() {
@@ -119,6 +122,13 @@ class HatsPlugin: JavaPlugin() {
             AudienceProvider.nativeAudience(),
             cmdManager
         )
+
+        try {
+            cmdManager.registerBrigadier()
+        } catch (err: Exception) {
+            this.logger.warning("Failed to link with brigadier")
+        }
+
         CoreCommands(cmdManager, help)
         HatsManagementCommands(this,cmdManager)
         HatsHandlingCommands(this, cmdManager)
@@ -126,14 +136,6 @@ class HatsPlugin: JavaPlugin() {
         //DEV
 //        val dev = DevCommands(this, cmdManager)
 //        if (hats.size == 0) dev.generateTestHats(1)
-
-        try {
-            if (cmdManager.hasCapability(CloudBukkitCapabilities.BRIGADIER)) {
-                cmdManager.registerBrigadier()
-            }
-        } catch (err: Exception) {
-            this.logger.warning("Failed to link with brigadier")
-        }
 
         this.logger.info("Registering listeners")
         PaperInterfaceListeners.install(this)

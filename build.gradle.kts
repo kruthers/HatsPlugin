@@ -1,11 +1,11 @@
 plugins {
-    kotlin("jvm") version "1.9.0"
+    kotlin("jvm") version "1.9.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("xyz.jpenilla.run-paper") version "2.0.0"
 }
 
 group = "com.kruthers"
-version = "1.1.1"
+version = "1.1.2"
 
 repositories {
     mavenCentral()
@@ -21,7 +21,7 @@ dependencies {
     compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.7.0") {isTransitive = false}
 
-    val cloudVersion = "1.8.3"
+    val cloudVersion = "1.8.4"
     compileOnly("cloud.commandframework:cloud-core:${cloudVersion}")
     compileOnly("cloud.commandframework:cloud-paper:${cloudVersion}")
     compileOnly("cloud.commandframework:cloud-minecraft-extras:${cloudVersion}")
@@ -29,7 +29,7 @@ dependencies {
     implementation("org.incendo.interfaces:interfaces-paper:1.0.0-SNAPSHOT")
     implementation("org.incendo.interfaces:interfaces-kotlin:1.0.0-SNAPSHOT")
 
-    val adventureVersion = "4.14.0"
+    val adventureVersion = "4.15.0"
     compileOnly("net.kyori","adventure-api",adventureVersion)
     compileOnly("net.kyori","adventure-platform-bukkit","4.3.0")
     compileOnly("net.kyori","adventure-text-minimessage",adventureVersion)
