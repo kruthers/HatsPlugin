@@ -1,5 +1,6 @@
 package com.kruthers.hats.listeners
 
+import com.kruthers.hats.HatManager
 import com.kruthers.hats.HatsPlugin
 import com.kruthers.hats.classes.UpdateInventoryRunnable
 import com.kruthers.hats.utils.convertToHelmet
@@ -7,6 +8,7 @@ import com.kruthers.hats.utils.isItemAHat
 import com.kruthers.hats.utils.isItemAHelmet
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.format.NamedTextColor
+import org.bukkit.Bukkit
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
 import org.bukkit.event.enchantment.EnchantItemEvent
@@ -31,7 +33,8 @@ class InventoryEvents(val plugin: HatsPlugin): Listener {
         val player = event.whoClicked
         if (slot == 39 && singleSlotActions.contains(event.action) && !event.isCancelled) {
             val item = player.inventory.getItem(39)
-            if (isItemAHat(item)) {
+            val truePlayer = Bukkit.getPlayer(player.uniqueId)!!
+            if (!HatManager.hasHatsDisabled(truePlayer) && isItemAHat(item)) {
                 item!!
                 player.inventory.setItem(EquipmentSlot.HEAD, convertToHelmet(item))
             }

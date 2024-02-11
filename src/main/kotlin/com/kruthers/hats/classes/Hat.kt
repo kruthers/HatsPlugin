@@ -1,6 +1,6 @@
 package com.kruthers.hats.classes
 
-import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.HatManager
 import com.kruthers.hats.utils.ModelIdNotUnique
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.minimessage.MiniMessage
@@ -19,7 +19,7 @@ class Hat(
 
     var modelData: Int = modelData
         set(value) {
-            val oldHat = HatsPlugin.getHatFromModelData(value)
+            val oldHat = HatManager.getHatFromModelData(value)
             if (oldHat != null &&  oldHat.id != this.id) {
                 throw ModelIdNotUnique(value)
             }

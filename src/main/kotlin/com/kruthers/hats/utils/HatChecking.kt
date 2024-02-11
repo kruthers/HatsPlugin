@@ -1,16 +1,28 @@
 package com.kruthers.hats.utils
 
-import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.HatManager
 import org.bukkit.Material
 import org.bukkit.inventory.ItemFlag
 import org.bukkit.inventory.ItemStack
 
+fun isAHat(item: ItemStack?): Boolean {
+    if (item != null && (item.type == Material.LEATHER_HORSE_ARMOR || item.type == Material.LEATHER_HELMET) && item.itemMeta.hasCustomModelData()) {
+        if (HatManager.getHatFromModelData(item.itemMeta.customModelData) != null) return true
+        //Gamemode 4 check
+        return if (item.mcStack.tag?.contains("ps_hats") == true) {
+//            HatManager.addHat()
+            true
+        } else false
+    }
+    return false
+}
+
 fun isItemAHat(item: ItemStack?): Boolean {
-    return (item != null && item.type == Material.LEATHER_HORSE_ARMOR && item.itemMeta.hasCustomModelData() && HatsPlugin.getHatFromModelData(item.itemMeta.customModelData) != null)
+    return isAHat(item) && item!!.type == Material.LEATHER_HORSE_ARMOR
 }
 
 fun isItemAHelmet(item: ItemStack?): Boolean {
-    return (item != null && item.type == Material.LEATHER_HELMET && item.itemMeta.hasCustomModelData() && HatsPlugin.getHatFromModelData(item.itemMeta.customModelData) != null)
+    return isAHat(item) && item!!.type == Material.LEATHER_HELMET
 }
 
 fun convertToHat(helmet: ItemStack): ItemStack {

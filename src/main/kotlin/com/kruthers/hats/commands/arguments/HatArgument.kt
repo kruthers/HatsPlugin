@@ -9,7 +9,7 @@ import cloud.commandframework.captions.CaptionVariable
 import cloud.commandframework.context.CommandContext
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException
 import cloud.commandframework.exceptions.parsing.ParserException
-import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.HatManager
 import com.kruthers.hats.classes.Hat
 import java.util.*
 import java.util.function.BiFunction
@@ -65,7 +65,7 @@ class HatArgument<C: Any>(
                 val input = inputQueue.peek()
                     ?: return ArgumentParseResult.failure(NoInputProvidedException(this::class.java, commandContext))
 
-                val hat = HatsPlugin.hats[input]
+                val hat = HatManager.hats[input]
                 return if (hat != null) {
                     inputQueue.remove()
                     ArgumentParseResult.success(hat)

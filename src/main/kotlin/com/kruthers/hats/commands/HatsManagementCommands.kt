@@ -6,6 +6,7 @@ import cloud.commandframework.arguments.standard.StringArgument
 import cloud.commandframework.bukkit.BukkitCommandManager
 import cloud.commandframework.context.CommandContext
 import cloud.commandframework.meta.CommandMeta
+import com.kruthers.hats.HatManager
 import com.kruthers.hats.HatsPlugin
 import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.commands.arguments.HatArgument
@@ -121,7 +122,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val description: String = context.get("description")
         val dyable: Boolean = context.get("dyeable")
         val hat = Hat(id, displayName, customModelData, description, dyable)
-        HatsPlugin.addHat(hat)
+        HatManager.addHat(hat)
 
         context.sender.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
     }
@@ -143,7 +144,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
 
             val hat = Hat(id, displayName, customModelData, lore, dyable)
             try {
-                HatsPlugin.addHat(hat)
+                HatManager.addHat(hat)
                 player.sendMessage(mm.deserialize("<green>Created new hat with a custom model data of <gray>${customModelData}"))
             } catch (error: ModelIdNotUnique) {
                 player.sendMessage(Component.text("Unable to create hat, looks like the custom module data is already in use", NamedTextColor.RED))
@@ -156,7 +157,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
 
     private fun removeHat(context: CommandContext<CommandSender>) {
         val hat: Hat = context.get("hat")
-        HatsPlugin.removeHat(hat.id)
+        HatManager.removeHat(hat.id)
         val tags = TagResolver.resolver(
             Placeholder.parsed("command", "/hats add ${hat.id} ${hat.modelData} ${mm.serialize(hat.displayName)} \"${hat.getDescription().joinToString { "<br>" }}\" ${hat.dyeable}")
         )
@@ -168,7 +169,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val displayName: String = context.get("input")
 
         hat.displayName = mm.deserialize(displayName)
-        HatsPlugin.hats[hat.id] = hat
+        HatManager.hats[hat.id] = hat
         val tags = TagResolver.resolver(
             Placeholder.parsed("name", hat.id),
             Placeholder.parsed("display_name", displayName)
@@ -182,7 +183,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val description: String = context.get("input")
 
         hat.setDescription(description)
-        HatsPlugin.hats[hat.id] = hat
+        HatManager.hats[hat.id] = hat
         val tags = TagResolver.resolver(
             Placeholder.parsed("name", hat.id),
             Placeholder.parsed("description", description)
@@ -196,7 +197,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val customModelData: Int = context.get("input")
 
         hat.modelData = customModelData
-        HatsPlugin.hats[hat.id] = hat
+        HatManager.hats[hat.id] = hat
         val tags = TagResolver.resolver(
             Placeholder.parsed("name", hat.id),
             Placeholder.parsed("model_data", "$customModelData")
@@ -209,7 +210,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
         val dyeable: Boolean = context.get("input")
 
         hat.dyeable = dyeable
-        HatsPlugin.hats[hat.id] = hat
+        HatManager.hats[hat.id] = hat
         val tags = TagResolver.resolver(
             Placeholder.parsed("name", hat.id),
         )
@@ -223,7 +224,7 @@ class HatsManagementCommands(private val plugin: HatsPlugin, manager: BukkitComm
     private fun showMenu(context: CommandContext<CommandSender>) {
         val player = context.sender as Player
 
-        val hats = HatsPlugin.hats.values.sortedBy { it.modelData }
+        val hats = HatManager.hats.values.sortedBy { it.modelData }
 
         val menu = buildChestInterface {
             title = Component.text("Hats Menu")

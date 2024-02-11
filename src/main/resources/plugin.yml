@@ -4,7 +4,6 @@ main: com.kruthers.hats.HatsPlugin
 api-version: 1.19
 depend:
   - PandaLib
-  - ProtocolLib
 authors: [ kruthers ]
 description: Hats! What more do you want!
 website: www.kruthers.com

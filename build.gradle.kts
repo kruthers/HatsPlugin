@@ -2,10 +2,11 @@ plugins {
     kotlin("jvm") version "1.9.22"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("xyz.jpenilla.run-paper") version "2.0.0"
+    id("io.papermc.paperweight.userdev") version "1.5.11"
 }
 
 group = "com.kruthers"
-version = "1.1.2"
+version = "1.2.0"
 
 repositories {
     mavenCentral()
@@ -18,7 +19,8 @@ repositories {
 dependencies {
     compileOnly(kotlin("stdlib"))
 
-    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+//    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+    paperweight.paperDevBundle("1.20.4-R0.1-SNAPSHOT")
     compileOnly("com.comphenix.protocol:ProtocolLib:4.7.0") {isTransitive = false}
 
     val cloudVersion = "1.8.4"
@@ -50,12 +52,13 @@ tasks {
     }
     build {
         dependsOn(shadowJar)
+        dependsOn(assemble)
     }
     processResources {
         expand("name" to project.name, "description" to project.description, "version" to project.version)
     }
     runServer {
-        minecraftVersion("1.20.1")
+        minecraftVersion("1.20.4")
     }
 }
 

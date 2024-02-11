@@ -1,5 +1,6 @@
 package com.kruthers.hats.classes
 
+import com.kruthers.hats.HatManager
 import com.kruthers.hats.HatsPlugin
 import org.bukkit.configuration.InvalidConfigurationException
 import org.bukkit.configuration.file.YamlConfiguration
@@ -62,12 +63,12 @@ class HatsData(private val plugin: HatsPlugin) {
                 hats[it.id] = it
             }
         }
-        HatsPlugin.hats.putAll(hats)
+        HatManager.hats.putAll(hats)
     }
 
     fun saveHats() {
         if (isInitialised) {
-            this.data.set("hats", HatsPlugin.hats.values.toList())
+            this.data.set("hats", HatManager.hats.values.toList())
             this.data.save(this.file)
             this.plugin.logger.info("Saved hats")
         }

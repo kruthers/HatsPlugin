@@ -5,33 +5,24 @@ import cloud.commandframework.minecraft.extras.AudienceProvider
 import cloud.commandframework.minecraft.extras.MinecraftExceptionHandler
 import cloud.commandframework.minecraft.extras.MinecraftHelp
 import cloud.commandframework.paper.PaperCommandManager
-import com.comphenix.protocol.ProtocolLibrary
-import com.comphenix.protocol.ProtocolManager
 import com.kruthers.hats.classes.Hat
 import com.kruthers.hats.classes.HatsData
 import com.kruthers.hats.commands.CoreCommands
 import com.kruthers.hats.commands.HatsHandlingCommands
 import com.kruthers.hats.commands.HatsManagementCommands
-import com.kruthers.hats.listeners.EquipmentPacket
+import com.kruthers.hats.listeners.ConnectionListener
 import com.kruthers.hats.listeners.InteractionEvents
 import com.kruthers.hats.listeners.InventoryEvents
 import com.kruthers.hats.listeners.ResourcePackListeners
-import com.kruthers.hats.utils.ModelIdNotUnique
 import net.kyori.adventure.text.Component
-import org.bukkit.Bukkit
 import org.bukkit.command.CommandSender
 import org.bukkit.configuration.serialization.ConfigurationSerialization
-import org.bukkit.entity.Player
 import org.bukkit.plugin.java.JavaPlugin
 import org.incendo.interfaces.paper.PaperInterfaceListeners
-import java.util.*
 import java.util.function.Function
 
 
 class HatsPlugin: JavaPlugin() {
-    private var hatsDisabled: Set<Player> = hashSetOf()
-    private var forceEnabled: Set<UUID> = hashSetOf()
-    private lateinit var protocolManager: ProtocolManager
     private val hatsData = HatsData(this)
 
     init {
@@ -39,58 +30,12 @@ class HatsPlugin: JavaPlugin() {
     }
 
     companion object {
-        val hats: HashMap<String, Hat> = HashMap()
-
-        /**
-         * Gets a hat using only the model data value
-         * @param modelData The model data value to use, should already be adjusted
-         * @return the hat or null if there is no hat with that id
-         */
-        fun getHatFromModelData(modelData: Int): Hat? {
-            return this.hats.values.firstOrNull{ it.modelData == modelData }
-        }
-
-        /**
-         * Adds/ updates a hat on the plugin
-         * @param hat The hat to add
-         * @throws ModelIdNotUnique if the hats custom model data is already in
-         */
-        fun addHat(hat: Hat): Boolean  {
-            val oldHat = this.getHatFromModelData(hat.modelData)
-            if (oldHat != null && oldHat.id != hat.id) {
-                throw ModelIdNotUnique(hat.modelData)
-            }
-
-            this.hats[hat.id] = hat
-            return true
-        }
-
-        /**
-         * Removes a hat from the plugin
-         * @param id The id of the hat to remove
-         * @return The hat if it was removed, null if no hat was removed
-         */
-        fun removeHat(id: String): Hat? {
-            val hat = this.hats[id]
-            return if (hat != null) {
-                this.hats.remove(id)
-                hat
-            } else {
-                null
-            }
-        }
+        lateinit var SELF: HatsPlugin
+        val instance: HatsPlugin get() = SELF
     }
 
     override fun onEnable() {
-        this.logger.info("Loading requirements")
-        try {
-            this.protocolManager = ProtocolLibrary.getProtocolManager()
-        } catch (error: Error) {
-            this.logger.warning("Unable to enable plugin, missing dependency ProtocolLibrary")
-            Bukkit.getPluginManager().disablePlugin(this)
-            return
-        }
-
+        SELF = this
         this.logger.info("Loading Config")
         this.config.options().copyDefaults(true)
         this.saveConfig()
@@ -139,50 +84,16 @@ class HatsPlugin: JavaPlugin() {
 
         this.logger.info("Registering listeners")
         PaperInterfaceListeners.install(this)
-        protocolManager.addPacketListener(EquipmentPacket(this))
         this.server.pluginManager.registerEvents(InventoryEvents(this), this)
         this.server.pluginManager.registerEvents(InteractionEvents(this), this)
         this.server.pluginManager.registerEvents(ResourcePackListeners(this), this)
+        this.server.pluginManager.registerEvents(ConnectionListener(), this)
 
+        SELF = this
     }
 
     override fun onDisable() {
         this.logger.info("Saving hat data")
         this.hatsData.saveHats()
     }
-
-    //Hat display tracking
-    fun hasHatsDisabled(player: Player): Boolean {
-        return hatsDisabled.contains(player)
-    }
-
-    fun disableHats(player: Player) {
-        this.hatsDisabled = this.hatsDisabled.plus(player)
-        this.forceEnabled = this.forceEnabled.minus(player.uniqueId)
-
-        this.reloadEntities(player)
-    }
-
-    fun hasHatsForceEnabled(player: Player): Boolean {
-        return forceEnabled.contains(player.uniqueId)
-    }
-
-    fun forceEnableHats(player: Player) {
-        this.hatsDisabled = this.hatsDisabled.minus(player)
-        this.forceEnabled = this.forceEnabled.plus(player.uniqueId)
-
-        this.reloadEntities(player)
-    }
-
-    @Suppress("UnstableApiUsage")
-    private fun reloadEntities(player: Player) {
-        val viewDistance = ((player.viewDistance + 1)*16).toDouble()
-        val entites = player.getNearbyEntities(viewDistance,viewDistance,356.0)
-        entites.forEach {
-            player.hideEntity(this, it)
-            player.showEntity(this, it)
-        }
-    }
-
-
 }

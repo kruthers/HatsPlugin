@@ -10,7 +10,7 @@ import cloud.commandframework.context.CommandContext
 import cloud.commandframework.exceptions.parsing.NoInputProvidedException
 import cloud.commandframework.exceptions.parsing.NumberParseException
 import cloud.commandframework.exceptions.parsing.ParserException
-import com.kruthers.hats.HatsPlugin
+import com.kruthers.hats.HatManager
 import java.util.*
 import java.util.function.BiFunction
 
@@ -77,7 +77,7 @@ class UnusedHatModelArgument<C: Any>(
                     return ArgumentParseResult.failure(InvalidNumberException(commandContext, input))
                 }
 
-                val hat = HatsPlugin.getHatFromModelData(value)
+                val hat = HatManager.getHatFromModelData(value)
                 return if (hat == null) {
                     ArgumentParseResult.success(value)
                 } else {
