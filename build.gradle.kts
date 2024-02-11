@@ -40,19 +40,21 @@ dependencies {
 
 
 tasks {
+    assemble {
+        dependsOn(reobfJar)
+    }
     shadowJar {
-        archiveClassifier.set("")
-
-//        dependencies {
-//            exclude(dependency("io.papermc.paper:paper-api:1.18.2-R0.1-SNAPSHOT"))
-//            exclude(dependency("com.comphenix.protocol:ProtocolLib:4.7.0"))
-//        }
-
         minimize()
     }
     build {
-        dependsOn(shadowJar)
         dependsOn(assemble)
+    }
+    compileJava {
+        options.encoding = Charsets.UTF_8.name()
+        options.release.set(17)
+    }
+    reobfJar {
+        outputJar.set(layout.buildDirectory.file("libs/Hats-${project.version}.jar"))
     }
     processResources {
         expand("name" to project.name, "description" to project.description, "version" to project.version)
