@@ -9,10 +9,8 @@ fun isAHat(item: ItemStack?): Boolean {
     if (item != null && (item.type == Material.LEATHER_HORSE_ARMOR || item.type == Material.LEATHER_HELMET) && item.itemMeta.hasCustomModelData()) {
         if (HatManager.getHatFromModelData(item.itemMeta.customModelData) != null) return true
         //Gamemode 4 check
-        return if (item.mcStack.tag?.contains("ps_hats") == true) {
+        return item.mcStack.tag?.contains("ps_hats") == true
 //            HatManager.addHat()
-            true
-        } else false
     }
     return false
 }

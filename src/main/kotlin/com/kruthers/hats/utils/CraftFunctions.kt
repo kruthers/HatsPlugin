@@ -10,4 +10,4 @@ val Player.handle: ServerPlayer
     get() = (this as CraftPlayer).handle
 
 val ItemStack.mcStack: net.minecraft.world.item.ItemStack
-    get() = (this as CraftItemStack).handle
+    get() = (CraftItemStack.asCraftCopy(this)).handle
