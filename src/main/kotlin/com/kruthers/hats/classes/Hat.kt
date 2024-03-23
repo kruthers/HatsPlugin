@@ -15,7 +15,7 @@ class Hat(
     modelData: Int,
     private var description: List<Component>,
     var dyeable: Boolean
-    ): ConfigurationSerializable {
+): ConfigurationSerializable {
 
     var modelData: Int = modelData
         set(value) {

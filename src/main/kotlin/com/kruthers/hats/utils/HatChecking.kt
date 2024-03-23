@@ -10,7 +10,7 @@ fun isAHat(item: ItemStack?): Boolean {
         if (HatManager.getHatFromModelData(item.itemMeta.customModelData) != null) return true
         //Gamemode 4 check
         return if (item.mcStack.tag?.contains("ps_hats") == true) {
-//            HatManager.addHat()
+            item.toHat()?.let { HatManager.addHat(it) }
             true
         } else false
     }
